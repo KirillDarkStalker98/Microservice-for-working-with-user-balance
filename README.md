@@ -46,55 +46,55 @@
    
 * Ответ: {"message":"Деньги добавлены на баланс"}
 
-2. Добавление имени пользователю
+### 2. Добавление имени пользователю
 
 * Запрос: curl -X POST "http://localhost:8080/username/add" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"name\": \"KirillDarkStalker98\"}"
    
 * Ответ: {"message":"Пользователь успешно добавлен"}
 
-3. Получение баланса
+### 3. Получение баланса
 
 * Запрос: curl -X GET http://localhost:8080/balance/75
    
 * Ответ: {"balance":250,"user_id":75}
 
-4. Добавление услуги в базу данных 
+### 4. Добавление услуги в базу данных 
 
 * Запрос: curl -X POST http://localhost:8080/services/add -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkServise\"}"
   
 * Ответ: {"message":"Услуга успешно добавлена"}
 
-5. Обновление названия услуги
+### 5. Обновление названия услуги
 
 * Запрос: curl -X POST http://localhost:8080/services/update -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkService98\"}"
 
 * Ответ: {"message":"Услуга успешно обновлена"}
 
-6. Удаление услуги 
+### 6. Удаление услуги 
 
 * Запрос: curl -X DELETE http://localhost:8080/services/delete -H "Content-Type: application/json" -d "{\"service_id\": 98}"
 
 * Ответ: {"message":"Услуга успешно удалена"}
 
-7. Резервирование средств на отдельном счёте для покупки услуги 
+### 7. Резервирование средств на отдельном счёте для покупки услуги 
 
 * Запрос: curl -X POST http://localhost:8080/funds/reserve -H "Content-Type: application/json" -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0}"
 
 * Ответ: {"message":"Деньги для покупки услуги успешно зарезервированы (Дождитесь обработки покупки)"}
 
-8. Списание средств 
+### 8. Списание средств 
 
 * Запрос: curl -X POST "http://localhost:8080/funds/deduct" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0, \"success\": true}"
 
 * Ответ: {"message":"Услуга успешно приобретена"}
 
-9. Отчёт 
+### 9. Отчёт 
 
 * Запрос: curl -X GET http://localhost:8080/report/2024/10
   
 * Ответ: {"report_url":"/reports/месячный_отчёт_2024_10.csv"}
 
-10. Просмотр транзакций 
+### 10. Просмотр транзакций 
 * Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount" (ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 
 * Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75" (ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)
@@ -152,7 +152,7 @@
   }
   
 
-11. Перевод денег
+### 11. Перевод денег
     
 * Запрос: curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":75,\"to_user_id\":25,\"amount\":50.00}"
 
