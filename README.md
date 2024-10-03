@@ -42,151 +42,121 @@
 
 1. Добавление пользователя и зачисление на счёт средств
 
-Запрос: curl -X POST "http://localhost:8080/balance/add" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"amount\": 250.00}"
+* Запрос: curl -X POST "http://localhost:8080/balance/add" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"amount\": 250.00}"
    
-Ответ: {"message":"Деньги добавлены на баланс"}
+* Ответ: {"message":"Деньги добавлены на баланс"}
 
 2. Добавление имени пользователю
 
-Запрос: curl -X POST "http://localhost:8080/username/add" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"name\": \"KirillDarkStalker98\"}"
+* Запрос: curl -X POST "http://localhost:8080/username/add" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"name\": \"KirillDarkStalker98\"}"
    
-Ответ: {"message":"Пользователь успешно добавлен"}
+* Ответ: {"message":"Пользователь успешно добавлен"}
 
 3. Получение баланса
 
-Запрос: curl -X GET http://localhost:8080/balance/75
+* Запрос: curl -X GET http://localhost:8080/balance/75
    
-Ответ: {"balance":250,"user_id":75}
+* Ответ: {"balance":250,"user_id":75}
 
-8. Добавление услуги в базу данных (curl -X POST http://localhost:8080/services/add -H "Content-Type: application/json" -d "{\"service_id\": 1001, \"service_name\": \"Service\"}"
-curl -X POST http://localhost:8080/services/add -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkServise\"}"
-{"message":"Service added successfully"} {"message":"Услуга успешно добавлена"})
+4. Добавление услуги в базу данных 
 
-9. Обновление названия услуги (curl -X POST http://localhost:8080/services/update -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkService98\"}"
-{"message":"Услуга успешно обновлена"})
+* Запрос: curl -X POST http://localhost:8080/services/add -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkServise\"}"
+  
+* Ответ: {"message":"Услуга успешно добавлена"}
 
-10. Удаление услуги (curl -X DELETE http://localhost:8080/services/delete -H "Content-Type: application/json" -d "{\"service_id\": 1423}"
-{"message":"Услуга успешно удалена"})
+5. Обновление названия услуги
 
-11. Резервирование средств на отдельном счёте для покупки услуги (curl -X POST http://localhost:8080/funds/reserve -H "Content-Type: application/json" -d "{\"user_id\": 1, \"service_id\": 1001, \"order_id\": 1, \"amount\": 100.0}"
-{"message":"Funds reserved successfully"}
-curl -X POST http://localhost:8080/funds/reserve -H "Content-Type: application/json" -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0}"
-{"message":"Деньги для покупки услуги успешно зарезервированы (Дождитесь обработки покупки)"})
+* Запрос: curl -X POST http://localhost:8080/services/update -H "Content-Type: application/json" -d "{\"service_id\": 98, \"service_name\": \"DarkService98\"}"
 
-ГОВНО. (МБ) Признание выручки SAME (curl -X POST http://localhost:8080/funds/recognize -H "Content-Type: application/json" -d "{\"user_id\": 1, \"service_id\": 1001, \"order_id\": 1, \"amount\": 100.0}"
-No reserved funds found for the given user, service, and order: sql: no rows in result set)
+* Ответ: {"message":"Услуга успешно обновлена"}
 
-8. Списание средств SAME (ПОЛУЧШ) (curl -X POST "http://localhost:8080/funds/deduct" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 1, \"service_id\": 1001, \"order_id\": 1, \"amount\": 100.0, \"success\": true}"
-{"message":"Service applied successfully"}
-curl -X POST "http://localhost:8080/funds/deduct" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0, \"success\": true}"
-{"message":"Услуга успешно приобретена"})
+6. Удаление услуги 
 
-9. Отчёт (C:\Windows\System32> (curl -X GET http://localhost:8080/report/2024/09
-{"report_url":"/reports/monthly_report_2024_09.csv"}
-curl -X GET http://localhost:8080/report/2024/10
-{"report_url":"/reports/месячный_отчёт_2024_10.csv"})
+* Запрос: curl -X DELETE http://localhost:8080/services/delete -H "Content-Type: application/json" -d "{\"service_id\": 98}"
 
-10. Просмотр транзакций (curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount"(ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
-[
+* Ответ: {"message":"Услуга успешно удалена"}
+
+7. Резервирование средств на отдельном счёте для покупки услуги 
+
+* Запрос: curl -X POST http://localhost:8080/funds/reserve -H "Content-Type: application/json" -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0}"
+
+* Ответ: {"message":"Деньги для покупки услуги успешно зарезервированы (Дождитесь обработки покупки)"}
+
+8. Списание средств 
+
+* Запрос: curl -X POST "http://localhost:8080/funds/deduct" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0, \"success\": true}"
+
+* Ответ: {"message":"Услуга успешно приобретена"}
+
+9. Отчёт 
+
+* Запрос: curl -X GET http://localhost:8080/report/2024/10
+  
+* Ответ: {"report_url":"/reports/месячный_отчёт_2024_10.csv"}
+
+10. Просмотр транзакций 
+* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount"(ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
+
+* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75"(ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)
+  
+* Ответ:
+
+  [
+  
   {
-    "transaction_id": 1,
-    "user_id": 1,
-    "service_name": "Service",
-    "amount": 100,
-    "transaction_date": "2024-09-19T10:59:16.723177Z",
-    "comment": "Revenue recognized for order 1"
-  },
-  {
-    "transaction_id": 2,
-    "user_id": 1,
-    "service_name": "Service",
-    "amount": 100,
-    "transaction_date": "2024-09-19T13:04:05.955149Z",
-    "comment": "1"
-  },
-  {
-    "transaction_id": 3,
-    "user_id": 2,
-    "service_name": "",
-    "amount": 100,
-    "transaction_date": "2024-09-20T12:50:22.729912Z",
-    "comment": "Transfer to user 1"
-  },
-  {
-    "transaction_id": 4,
-    "user_id": 1,
-    "service_name": "",
-    "amount": 100,
-    "transaction_date": "2024-09-20T12:50:22.729912Z",
-    "comment": "Transfer from user 2"
-  },
-  {
-    "transaction_id": 5,
-    "user_id": 2,
-    "service_name": "",
-    "amount": 100,
-    "transaction_date": "2024-09-20T13:02:01.41351Z",
-    "comment": "Account deposit"
-  }
-]
-curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=1"(ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)[
-  {
-    "transaction_id": 2,
-    "user_id": 1,
-    "service_name": "Service",
-    "amount": 100,
-    "transaction_date": "2024-09-19T13:04:05.955149Z",
-    "comment": "1"
-  },
-  {
-    "transaction_id": 1,
-    "user_id": 1,
-    "service_name": "Service",
-    "amount": 100,
-    "transaction_date": "2024-09-19T10:59:16.723177Z",
-    "comment": "Revenue recognized for order 1"
-  },
-  {
-    "transaction_id": 4,
-    "user_id": 1,
-    "service_name": "",
-    "amount": 100,
-    "transaction_date": "2024-09-20T12:50:22.729912Z",
-    "comment": "Transfer from user 2"
-  }
-]
-curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75"
-[
-  {
+  
     "transaction_id": 25,
+  
     "user_id": 75,
+  
     "service_name": "",
+  
     "amount": 250,
+  
     "transaction_date": "2024-10-03T13:07:56.829947Z",
+  
     "comment": "Пополнение счета"
+  
   },
+  
   {
+  
     "transaction_id": 26,
+  
     "user_id": 75,
+  
     "service_name": "DarkService98",
+  
     "amount": 150,
+  
     "transaction_date": "2024-10-03T13:19:04.28019Z",
+  
     "comment": "Выручка признана по заказу 98"
+  
   },
+  
   {
+  
     "transaction_id": 31,
+  
     "user_id": 75,
+  
     "service_name": "",
+  
     "amount": 50,
+  
     "transaction_date": "2024-10-03T13:29:02.556594Z",
+  
     "comment": "Перевод пользователю 25"
-  })
+  
+  }
+  
 
-11. Перевод денег (curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":1,\"to_user_id\":2,\"amount\":100.00}"
-curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":75,\"to_user_id\":25,\"amount\":50.00}"
-{"message":"Средства переведены успешно"}
-curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":75,\"to_user_id\":25,\"amount\":50.00}"
-{"message":"Средства переведены успешно"})
+11. Перевод денег
+    
+* Запрос: curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":75,\"to_user_id\":25,\"amount\":50.00}"
+
+* Ответ: {"message":"Средства переведены успешно"}
 
 ## Файлы сервиса и их назначение:
 
