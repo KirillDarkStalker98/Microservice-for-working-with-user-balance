@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
@@ -44,5 +45,16 @@ func initDB() {
 		Addr: "localhost:6379", // адрес Redis для windows
 		//Addr: "redis:6379", // адрес Redis для докера
 	})
+	for {
+		_, err := rdb.Ping(ctx).Result()
+		if err != nil {
+			fmt.Println("Не удалось подключиться к Redis:", err)
+			fmt.Println("Попробую снова через 30 секунд...")
+			time.Sleep(30 * time.Second)
+		} else {
+			fmt.Println("Подключение к Redis успешно!")
+			break
+		}
+	}
 
 }
