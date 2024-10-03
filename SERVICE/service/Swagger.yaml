@@ -1,0 +1,670 @@
+openapi: 3.0.0
+info:
+  title: Микросервис для работы с балансом пользователей
+  version: 1.0.0
+  description: Функционал API
+  Зачисление средств, списание средств (зачисление средств на резервный счёт перед покупкой и списание средств с него), 
+  перевод средств от пользователя к пользователю, метод получения баланса пользователя, создание, изменение и удаление услуг которые можно купить,
+  а так же можно создать пользователя и добавить ему имя, получение месячного отчёта, просмотр транзакций всех пользователей или одного пользователя (с пагинацей и сортировкой). 
+  Сервис предоставляет HTTP API и принимает/отдааёт запросы/ответы в формате JSON
+  servers:
+  - url: http://localhost:8080
+    description: Сервер для микросервиса для работы с балансом пользователей
+    paths:
+  /balance/add:
+    post:
+      summary: Пополнение баланса пользователя (Асинхронное выполнение через redis)
+      description: Добавляет указанную сумму на баланс пользователя. Если пользователь не существует, он будет создан. Обновление баланса выполняется асинхронно через очередь Redis, с помощью функции обработки `processQueueBalance`.
+      operationId: addBalance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  example: 123
+                amount:
+                  type: number
+                  format: float
+                  example: 100.50
+              required:
+                - user_id
+                - amount
+      responses:
+        '200':
+          description: Баланс успешно пополнен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Деньги добавлены на баланс"
+        '400':
+          description: Неверный запрос (например, сумма должна быть положительной или неправильный формат данных)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Сумма должна быть положительной"
+        '500':
+          description: Внутренняя ошибка сервера (например, ошибка базы данных или Redis)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Не удалось опубликовать задачу в Redis: internal error"
+                    
+  /username/add:
+    post:
+      summary: Добавить или обновить имя пользователя
+      operationId: addUserName
+      description: Добавляет нового пользователя с указанным `user_id` и `name`, либо обновляет имя существующего пользователя.
+      requestBody:
+        description: JSON объект с полями `user_id` и `name`
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - name
+              properties:
+                user_id:
+                  type: integer
+                  description: Идентификатор пользователя
+                  example: 123
+                name:
+                  type: string
+                  description: Имя пользователя
+                  example: "Иван Иванов"
+      responses:
+        '200':
+          description: Пользователь успешно добавлен или обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Пользователь успешно добавлен"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Ошибка при декодировании JSON"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось добавить или обновить пользователя)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось добавить или обновить пользователя"
+  /balance/{user_id}:
+    get:
+      summary: Получить баланс пользователя (Асинхронное выполнение)
+      operationId: getBalance
+      description: Предоставляет текущий баланс пользователя по указанному `user_id`. Выполняется асинхронно через каналы (goroutine).
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          description: Идентификатор пользователя
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Баланс успешно получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                    description: Идентификатор пользователя
+                    example: 123
+                  balance:
+                    type: number
+                    format: float
+                    description: Текущий баланс пользователя
+                    example: 1500.75
+        '400':
+          description: Неверный идентификатор пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Неверный идентификатор пользователя (user_id)"
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Пользователь не найден"
+        '500':
+          description: Внутренняя ошибка сервера (ошибка базы данных)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось получить баланс пользователя"   
+  /services/add:
+    post:
+      summary: Добавить новую услугу
+      operationId: addService
+      description: Добавляет новую услугу с указанным `service_id` и `service_name`. Если `service_id` не указан, он будет автоматически сгенерирован.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+                  description: Идентификатор услуги (необязательное поле, автоинкремент)
+                  example: 1
+                service_name:
+                  type: string
+                  description: Название услуги (обязательное поле)
+                  example: "Консультация"
+              required:
+                - service_name
+      responses:
+        '201':
+          description: Услуга успешно добавлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Услуга успешно добавлена"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Укажите название услуги"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось добавить услугу)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось добавить услугу: internal error"
+  /services/update:
+    post:
+      summary: Обновить название услуги
+      operationId: updateService
+      description: Обновляет название услуги по указанному `service_id`. Требуются идентификатор и новое название услуги.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+                  description: Идентификатор услуги (обязательное поле)
+                  example: 1
+                service_name:
+                  type: string
+                  description: Новое название услуги (обязательное поле)
+                  example: "Новая консультация"
+              required:
+                - service_id
+                - service_name
+      responses:
+        '200':
+          description: Услуга успешно обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Услуга успешно обновлена"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Требуется идентификатор и название услуги"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось обновить услугу)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось обновить название услуги: internal error"
+  /services/delete:
+    delete:
+      summary: Удалить услугу
+      operationId: deleteService
+      description: Удаляет услугу по указанному `service_id`. Требуется идентификатор услуги для удаления.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+                  description: Идентификатор услуги (обязательное поле)
+                  example: 1
+              required:
+                - service_id
+      responses:
+        '200':
+          description: Услуга успешно удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Услуга успешно удалена"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Требуется идентификатор услуги"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось удалить услугу)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось удалить услугу: internal error"
+  /funds/reserve:
+    post:
+      summary: Резервирование средств (Асинхронное выполнение через redis)
+      operationId: reserveFunds
+      description: Резервирует средства для покупки услуги. Требуется указать идентификаторы пользователя и услуги, сумму и идентификатор заказа. Резервирование выполняется асинхронно через очередь Redis, с помощью функции обработки `processQueueReserveFunds`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: Идентификатор пользователя (обязательное поле)
+                  example: 1
+                service_id:
+                  type: integer
+                  description: Идентификатор услуги (обязательное поле)
+                  example: 101
+                order_id:
+                  type: integer
+                  description: Идентификатор заказа (обязательное поле)
+                  example: 1001
+                amount:
+                  type: number
+                  format: float
+                  description: Сумма для резервирования (обязательное поле, должна быть положительной)
+                  example: 50.00
+              required:
+                - user_id
+                - service_id
+                - order_id
+                - amount
+      responses:
+        '202':
+          description: Средства успешно зарезервированы
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Деньги для покупки услуги успешно зарезервированы (Дождитесь обработки покупки)"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Сумма должна быть положительной"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось резервировать средства)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось добавить в очередь: internal error"
+  /funds/deduct:
+    post:
+      summary: Списать средства
+      operationId: deductFunds
+      description: Списывает средства за услугу, основываясь на результате ее выполнения. Если услуга не была успешно оказана, средства возвращаются на баланс.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                  description: Идентификатор пользователя (обязательное поле)
+                  example: 1
+                service_id:
+                  type: integer
+                  description: Идентификатор услуги (обязательное поле)
+                  example: 101
+                order_id:
+                  type: integer
+                  description: Идентификатор заказа (обязательное поле)
+                  example: 1001
+                amount:
+                  type: number
+                  format: float
+                  description: Сумма для списания (обязательное поле)
+                  example: 50.00
+                success:
+                  type: boolean
+                  description: Флаг успешного выполнения услуги (обязательное поле)
+                  example: true
+              required:
+                - user_id
+                - service_id
+                - order_id
+                - amount
+                - success
+      responses:
+        '200':
+          description: Средства успешно списаны или возвращены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Услуга успешно приобретена"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Недостаточно зарезервированных средств"
+        '500':
+          description: Внутренняя ошибка сервера (не удалось списать средства)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Не удалось начать транзакцию: internal error"
+  /funds/transfer:
+    post:
+      summary: Перевод средств между пользователями. (Асинхронное выполнение через redis)
+      operationId: transferFunds
+      description: Метод принимает запрос на перевод средств от одного пользователя к другому и добавляет задачу в очередь Redis для последующей обработки. Перевод выполняется асинхронно через очередь Redis, с помощью функции обработки `processQueueFundsTransfers`
+      parameters:
+        - in: body
+          name: requestData
+          description: Данные о переводе средств.
+          required: true
+          schema:
+            type: object
+            properties:
+              from_user_id:
+                type: integer
+                example: 1
+                description: Идентификатор отправителя.
+              to_user_id:
+                type: integer
+                example: 2
+                description: Идентификатор получателя.
+              amount:
+                type: number
+                format: float
+                example: 100.00
+                description: Сумма перевода. Должна быть положительной.
+      responses:
+        '202':
+          description: Запрос принят. Средства переведены успешно.
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Средства переведены успешно"
+        '400':
+          description: Неверный ввод или неправильная сумма перевода.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Неверный ввод: неверный формат JSON"
+        '500':
+          description: Ошибка сервера. Не удалось добавить задачу в очередь.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Не удалось добавить задачу в очередь: ошибка подключения к Redis"
+  /report/{year}/{month}:
+    get:
+      summary: Генерация месячного отчета о доходах. (Асинхронное выполнение)
+      operationId: getMonthlyReport
+      description: Метод принимает год и месяц, генерирует отчет о доходах от услуг за указанный период и возвращает ссылку на файл отчета в формате CSV. Выполняется асинхронно через каналы (goroutine)
+      parameters:
+        - name: year
+          in: path
+          required: true
+          type: integer
+          description: Год для генерации отчета.
+          example: 2024
+        - name: month
+          in: path
+          required: true
+          type: integer
+          description: Месяц для генерации отчета (1-12).
+          example: 9
+      responses:
+        '200':
+          description: Отчет успешно сгенерирован. Возвращает ссылку на отчет.
+          schema:
+            type: object
+            properties:
+              report_url:
+                type: string
+                example: "/reports/месячный_отчёт_2024_09.csv"
+        '400':
+          description: Некорректный запрос
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Неверный формат месяца"
+        '504':
+          description: Время запроса истекло.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Время запроса истекло"
+        '500':
+          description: Ошибка сервера. Не удалось сгенерировать отчет.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Не удалось выполнить запрос к базе данных: ошибка подключения"
+  /transactions:
+    get:
+      summary: Получение списка транзакций. (Асинхронное выполнение)
+      operationId: getTransactions
+      description: Метод возвращает список транзакций с возможностью пагинации, сортировки и фильтрации по идентификатору пользователя. Выполняется асинхронно через каналы (goroutine)
+      parameters:
+        - name: page
+          in: query
+          required: false
+          type: integer
+          description: Номер страницы (начиная с 1).
+          example: 1
+        - name: limit
+          in: query
+          required: false
+          type: integer
+          description: Количество транзакций на странице.
+          example: 10
+        - name: sort_by
+          in: query
+          required: false
+          type: string
+          description: Поле для сортировки (например, "amount" или "transaction_date").
+          example: "amount"
+        - name: user_id
+          in: query
+          required: false
+          type: integer
+          description: Идентификатор пользователя для фильтрации транзакций.
+          example: 42
+      responses:
+        '200':
+          description: Успешно получен список транзакций.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                transaction_id:
+                  type: integer
+                  example: 1
+                user_id:
+                  type: integer
+                  example: 42
+                service_name:
+                  type: string
+                  example: "Услуга 1"
+                amount:
+                  type: number
+                  format: float
+                  example: 100.50
+                transaction_date:
+                  type: string
+                  format: date-time
+                  example: "2024-09-28T12:34:56Z"
+                comment:
+                  type: string
+                  example: "Комментарий к транзакции"
+        '400':
+          description: Некорректный запрос 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Сообщение об ошибке
+                    example: "Неверный ввод: параметр 'user_id' должен быть целым числом"
+        '500':
+          description: Ошибка сервера. Не удалось получить транзакции.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Не удалось выполнить запрос к базе данных: ошибка подключения"
