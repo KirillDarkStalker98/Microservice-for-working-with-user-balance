@@ -95,9 +95,9 @@
 * Ответ: {"report_url":"/reports/месячный_отчёт_2024_10.csv"}
 
 10. Просмотр транзакций 
-* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount"(ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
+* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount" (ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 
-* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75"(ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)
+* Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75" (ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)
   
 * Ответ:
 
