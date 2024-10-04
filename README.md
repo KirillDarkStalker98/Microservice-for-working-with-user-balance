@@ -12,7 +12,7 @@
 
 * Перевод средств от пользователя к пользователю
 
-* Создание, изменение и удаление услуг которые можно купить
+* Создание, изменение, просмотр и удаление услуг которые можно купить
 
 * Получение месячного отчёта
 
@@ -87,25 +87,31 @@
 
 * Ответ: {"message":"Услуга успешно удалена"}
 
-### 7. Резервирование средств на отдельном счёте для покупки услуги 
+### 7. Получение информации об услуге
+
+* Запрос: curl -X GET http://localhost:8080/services/98
+
+* Ответ: {"service_id":98,"service_name":"DarkService98"}
+
+### 8. Резервирование средств на отдельном счёте для покупки услуги 
 
 * Запрос: curl -X POST http://localhost:8080/funds/reserve -H "Content-Type: application/json" -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0}"
 
 * Ответ: {"message":"Деньги для покупки услуги успешно зарезервированы (Дождитесь обработки покупки)"}
 
-### 8. Списание средств 
+### 9. Списание средств 
 
 * Запрос: curl -X POST "http://localhost:8080/funds/deduct" ^ -H "Content-Type: application/json" ^ -d "{\"user_id\": 75, \"service_id\": 98, \"order_id\": 98, \"amount\": 150.0, \"success\": true}"
 
 * Ответ: {"message":"Услуга успешно приобретена"}
 
-### 9. Отчёт 
+### 10. Отчёт 
 
 * Запрос: curl -X GET http://localhost:8080/report/2024/10
   
 * Ответ: {"report_url":"/reports/месячный_отчёт_2024_10.csv"}
 
-### 10. Просмотр транзакций 
+### 11. Просмотр транзакций 
 * Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount" (ТРАНЗАКЦИИ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ)
 
 * Запрос: curl -X GET "http://localhost:8080/transactions?page=1&limit=10&sort_by=amount&user_id=75" (ТРАНЗАКЦИИ ВЫБРАННОГО ПОЛЬЗОВАТЕЛЯ)
@@ -163,7 +169,7 @@
   }
   
 
-### 11. Перевод денег
+### 12. Перевод денег
     
 * Запрос: curl -X POST http://localhost:8080/funds/transfer -H "Content-Type: application/json" -d "{\"from_user_id\":75,\"to_user_id\":25,\"amount\":50.00}"
 
