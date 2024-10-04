@@ -26,6 +26,7 @@ func SERVICE() {
 	router.HandleFunc("/services/add", addService).Methods("POST")
 	router.HandleFunc("/services/update", updateService).Methods("POST")
 	router.HandleFunc("/services/delete", deleteService).Methods("DELETE")
+	router.HandleFunc("/services/{service_id}", getService).Methods("GET")
 
 	// Обработчик для резервирования средств
 	router.HandleFunc("/funds/reserve", reserveFunds).Methods("POST")

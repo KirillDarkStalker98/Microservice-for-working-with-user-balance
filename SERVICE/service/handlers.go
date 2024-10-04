@@ -323,6 +323,51 @@ func deleteService(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "Услуга успешно удалена"})
 }
 
+// Асинхронный метод получения информации об услуге
+func getService(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	serviceID, err := strconv.Atoi(vars["service_id"])
+
+	if err != nil {
+		http.Error(w, "Неверный идентификатор услуги (service_id)", http.StatusBadRequest)
+		return
+	}
+
+	// Канал для передачи результата
+	resultChan := make(chan struct {
+		serviceName string
+		err         error
+	})
+
+	// Запуск горутины для выполнения запроса к БД
+	go func() {
+		var serviceName string
+		err := bd.QueryRow("SELECT service_name FROM services WHERE service_id = $1", serviceID).Scan(&serviceName)
+		resultChan <- struct {
+			serviceName string
+			err         error
+		}{serviceName: serviceName, err: err}
+	}()
+
+	// Получение результата из канала
+	result := <-resultChan
+
+	if result.err == sql.ErrNoRows {
+		http.Error(w, "Услуга не найдена", http.StatusNotFound)
+		return
+	} else if result.err != nil {
+		http.Error(w, result.err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Успешный ответ
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"service_id":   serviceID,
+		"service_name": result.serviceName,
+	})
+}
+
 // Асинхронный метод резервирования средств с использованием системы очередей redis
 func reserveFunds(w http.ResponseWriter, r *http.Request) {
 	var reservation struct {
